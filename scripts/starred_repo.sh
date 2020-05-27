@@ -1,4 +1,11 @@
-USER=${1:-josura}
+readonly USER="$1"
+
+if [ -z "$USER" ]; then
+    echo "Use: $0 USER"
+    exit 1
+fi
+
+
 
 STARS=$(curl -sI https://api.github.com/users/$USER/starred?per_page=1|egrep '^Link'|egrep -o 'page=[0-9]+'|tail -1|cut -c6-)
 PAGES=$((658/100+1))
