@@ -18,3 +18,4 @@ DATA STREAMING, DATA INGESTION, DATA MANIPULATION
 
 DOCKER AND ORCHESTRATION SYSTEMS
 	https://spark.apache.org/docs/latest/running-on-kubernetes.html	
+	https://towardsdatascience.com/a-journey-into-big-data-with-apache-spark-part-1-5dfcc2bccdd2
