@@ -1,0 +1,20 @@
+SPARK RECCOMENDATION SYSTEM CONSTRUCTION
+	https://databricks.com/session/text-analytics-on-spark
+	https://spark.apache.org/docs/1.1.0/mllib-feature-extraction.html
+	https://chimpler.wordpress.com/2014/07/22/building-a-food-recommendation-engine-with-spark-mllib-and-play/
+	https://mapr.com/ebooks/spark/08-recommendation-engine-spark.html
+	https://spark.apache.org/docs/latest/mllib-collaborative-filtering.html
+	https://hub.packtpub.com/building-recommendation-system-with-scala-and-apache-spark-tutorial/
+	https://github.com/OndraFiedler/spark-recommender
+	https://www.kaggle.com/rosado/sentiment-analysis-text-mining
+	https://analyticsindiamag.com/document-classification-using-apache-spark-scala/
+
+KAFKA PRODUCERS, CONSUMERS, CONNECTORS, STREAMING, SINKS
+	https://medium.com/@stephane.maarek/the-kafka-api-battle-producer-vs-consumer-vs-kafka-connect-vs-kafka-streams-vs-ksql-ef584274c1e
+
+
+DATA STREAMING, DATA INGESTION, DATA MANIPULATION
+	https://www.elastic.co/guide/en/logstash/current/plugins-inputs-github.html
+
+DOCKER AND ORCHESTRATION SYSTEMS
+	https://spark.apache.org/docs/latest/running-on-kubernetes.html	
