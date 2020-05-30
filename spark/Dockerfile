@@ -8,3 +8,9 @@ ENV SPARK_HOME /opt/spark
 ADD sparkdir/spark-${SPARK_VERSION}-bin-hadoop2.7.tgz /opt
 
 RUN ln -s /opt/spark-${SPARK_VERSION}-bin-hadoop2.7 ${SPARK_HOME}
+
+COPY TextMining/ /opt/test_textMining/
+
+WORKDIR /opt/test_textMining
+
+CMD [ "sbt", "run" ]
