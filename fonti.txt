@@ -8,6 +8,7 @@ SPARK RECCOMENDATION SYSTEM CONSTRUCTION
 	https://github.com/OndraFiedler/spark-recommender
 	https://www.kaggle.com/rosado/sentiment-analysis-text-mining
 	https://analyticsindiamag.com/document-classification-using-apache-spark-scala/
+	https://community.cloudera.com/t5/Community-Articles/Spark-Text-Analytics-Uncovering-Data-Driven-Topics/ta-p/244377
 
 KAFKA PRODUCERS, CONSUMERS, CONNECTORS, STREAMING, SINKS
 	https://medium.com/@stephane.maarek/the-kafka-api-battle-producer-vs-consumer-vs-kafka-connect-vs-kafka-streams-vs-ksql-ef584274c1e
