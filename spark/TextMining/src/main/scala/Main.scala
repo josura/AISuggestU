@@ -45,13 +45,13 @@ object Main  {
     println("tfidf: ")
     tfidf.foreach(x => println(x))
 
-    val word2Vec = new Word2Vec()
+    /*val word2Vec = new Word2Vec()
       .setInputCol("text")
       .setOutputCol("result")
       .setVectorSize(3)
       .setMinCount(0)
 
-    /*val model = word2vec.fit(seqWords)
+    val model = word2vec.fit(seqWords)
 
     val synonyms = model.findSynonyms("scala", 5)
     println("word2vec")
@@ -84,26 +84,26 @@ object Main  {
         .toSeq
 
     //val colDataf=colCorrette.toDF("plaincontent")
-    val colDataf=spark.createDataFrame(spark.sparkContext.parallelize(colCorrette),schemaCol)
-    colDataf.show()
+    //val colDataf=spark.createDataFrame(spark.sparkContext.parallelize(colCorrette),schemaCol)
+    //colDataf.show()
     //var readmeDFPlain = readmedf.withColumn("plaincontent", colDataf("plaincontent"))
-    var fullContentDF =  readmedf.join(colDataf,colDataf("content")===readmedf("content"))
-    fullContentDF.show()
-    } catch {
-      case  e:Exception => {println("sto morendo"); spark.stop;}
-
-    }
-    //readmedf.withColumn("content",text2BinaryDecoding(col("content").toSring.replaceAll("\n","")))
+    //var fullContentDF =  readmedf.join(colCorrette,colCorrette("content")===readmedf("content"))
+    //fullContentDF.show()
+    
+    //readmedf.withColumn("content",text2BinaryDecoding(col("content").toString.replaceAll("\n","")))
     //readmedf.show()
 
-    val word2Vec = new Word2Vec()
+    /*val word2Vec_content_github = new Word2Vec()
       .setInputCol("text")
       .setOutputCol("result")
       .setVectorSize(3)
       .setMinCount(0)
 
-    val model = word2vec.fit( fullContentDF.select("plaincontent").collect()(0)(0).toString)
+    val model = word2Vec_content_github.fit( fullContentDF.select("plaincontent").collect()(0)(0).toString)*/
+    } catch {
+      case  e:Exception => {println("sto morendo"); spark.stop;}
 
+    }
     spark.stop()
 
 }
