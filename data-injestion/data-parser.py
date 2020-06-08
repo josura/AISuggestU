@@ -4,6 +4,8 @@ import os
 from github import Github
 from collections import defaultdict
 
+GITHUB_TOKEN = os.environ['GITHUB_TOKEN']
+
 def cleanLink(value):
     value = value[1:]
 
@@ -40,15 +42,17 @@ f = open("data.json", "w")
 link = "https://api.github.com/repositories"
 
 for i in range(0, 1):
-    data = requests.get(link)
+    data = requests.get(link, headers={'Authorization': 'token' +  GITHUB_TOKEN})
     header = data.headers
     filteredData = filterData(data.text)
     f.write(filteredData.encode('utf-8'))
     link = cleanLink(header['link'])
     #Get url, repoId, owner
 
-# # or using an access token
-# g = Github(os.environ['TOKEN_GITHUB'])
+f.close()
+
+# or using an access token
+# g = Github(GITHUB_TOKEN)
 
 # for repo in g.get_user().get_repos():
 #     print(repo.name)
