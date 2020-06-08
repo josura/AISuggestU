@@ -17,25 +17,35 @@ def cleanLink(value):
     return value[:i]
 
 def filterData(data):
-    dataDict = data.loads()
-    
-    # regroup data
-    d = defaultdict(dict)
-    for item in dataDict:
-        d[item["id"]].update(item)
+    pythonObj = json.loads(data)
+    stringDump = "["
+
+    for val in pythonObj:
+        repoId, repoUrl, owner =  val['id'], val['url'], val['owner']
+
+        ownerTemp = {}
+
+        ownerTemp['id'] = owner['id']
+        ownerTemp['user'] = owner['login']
+
+        stringDump += json.dumps({'id': repoId, 'url': repoUrl, 'owner': ownerTemp}) + ","
+
+    stringDump += ']'
+   
+    return stringDump
 
 
 
 f = open("data.json", "w")
 link = "https://api.github.com/repositories"
 
-for i in range(0, 3):
+for i in range(0, 1):
     data = requests.get(link)
     header = data.headers
-    filterData(data.json)
-    f.write(data.text.encode('utf-8'))
+    filteredData = filterData(data.text)
+    f.write(filteredData.encode('utf-8'))
     link = cleanLink(header['link'])
-    #Get url, repo_id, owner
+    #Get url, repoId, owner
 
 # # or using an access token
 # g = Github(os.environ['TOKEN_GITHUB'])
