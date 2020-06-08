@@ -1,17 +1,21 @@
 import requests
 import json
 import os
+import sys
+import logging
 import base64
 from github import Github
 from collections import defaultdict
 
 GITHUB_TOKEN = os.environ['GITHUB_TOKEN']
+logfile='data-parser.log'
+logging.basicConfig(filename=logfile, format = '%(asctime)s  %(levelname)-10s %(processName)s  %(name)s %(message)s', level = logging.INFO)
+
 
 def cleanLink(value):
     value = value[1:]
 
     i = 0
-
     for el in value:
         if el == '>':
             break
@@ -38,13 +42,15 @@ def filterData(data):
    
     return stringDump
 
+def getReadmeUrl(repoUrl):
+    return repoUrl + "/readme"
 
 
 def getRepos(iterationNumber):
     f = open("data.json", "w")
     link = "https://api.github.com/repositories"
 
-    for i in range(0, iterationNumber):
+    for _ in range(0, iterationNumber):
         data = requests.get(link, headers={'Authorization': 'token ' +  GITHUB_TOKEN})
         header = data.headers
         filteredData = filterData(data.text)
@@ -52,6 +58,7 @@ def getRepos(iterationNumber):
         link = cleanLink(header['link'])
 
     f.close()
+    logging.info("Repos written to data.json.")
 
 def getReadme():
     with open('data.json') as json_file:
@@ -59,10 +66,12 @@ def getReadme():
 
     for repo in data:
         repoUrl = repo['url']
+        readmeUrl = getReadmeUrl(repoUrl)
 
-        response = requests.get(repoUrl + "/readme", headers={'Authorization': 'token ' +  GITHUB_TOKEN})
+        response = requests.get(readmeUrl, headers={'Authorization': 'token ' +  GITHUB_TOKEN})
 
         if response.status_code != 200:
+            logging.warning("Response code isn't 200 {}".format(readmeUrl))
             continue
         
         readme = json.loads(response.text)['content']
@@ -72,13 +81,18 @@ def getReadme():
 
     with open('fulldata.json', 'w') as json_file:
         json_file.write(dumpedData)
+        logging.info("Repos Readme written to fulldata.json.")
         
 
 
 
 def main():
-    getRepos(1)
-    getReadme()
+    if len(sys.argv) > 1:
+        iterationNumber = int(sys.argv[1])
+        getRepos(iterationNumber)
+        getReadme()
+    else:
+        print("Use: python {} number_of_page".format(sys.argv[0]))
 
 
 
