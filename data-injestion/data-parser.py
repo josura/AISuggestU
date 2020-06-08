@@ -38,23 +38,25 @@ def filterData(data):
 
 
 
-f = open("data.json", "w")
-link = "https://api.github.com/repositories"
+def getRepos(iterationNumber):
+    f = open("data.json", "w")
+    link = "https://api.github.com/repositories"
 
-for i in range(0, 1):
-    data = requests.get(link, headers={'Authorization': 'token' +  GITHUB_TOKEN})
-    header = data.headers
-    filteredData = filterData(data.text)
-    f.write(filteredData.encode('utf-8'))
-    link = cleanLink(header['link'])
-    #Get url, repoId, owner
+    for i in range(0, iterationNumber):
+        data = requests.get(link, headers={'Authorization': 'token' +  GITHUB_TOKEN})
+        header = data.headers
+        filteredData = filterData(data.text)
+        f.write(filteredData.encode('utf-8'))
+        link = cleanLink(header['link'])
 
-f.close()
+    f.close()
 
-# or using an access token
-# g = Github(GITHUB_TOKEN)
+def main():
+    getRepos(1)
 
-# for repo in g.get_user().get_repos():
-#     print(repo.name)
-#     repo.edit(has_wiki=False)
-#     print(dir(repo))
+
+
+if __name__ == "__main__":
+    main()
+
+
