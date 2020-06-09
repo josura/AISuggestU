@@ -56,6 +56,11 @@ def getRepos(iterationNumber):
 
     for _ in range(0, iterationNumber):
         data = requests.get(link, headers={'Authorization': 'token ' +  GITHUB_TOKEN})
+
+        if data.status_code != 200:
+            logging.warning("Status code != 200 repo " + link)
+            continue
+        
         header = data.headers
         filteredData = filterData(data.text)
         f.write(filteredData.encode('utf-8'))
@@ -82,6 +87,7 @@ def getReadme():
         response = requests.get(readmeUrl, headers={'Authorization': 'token ' +  GITHUB_TOKEN})
 
         if response.status_code != 200:
+            data.remove(repo)
             logging.warning("Response code isn't 200 {}".format(readmeUrl))
             continue
         
@@ -104,9 +110,11 @@ def getReadme():
 
 
 def main():
-    nltk.download('stopwords')
-    nltk.download('punkt')
-    if len(sys.argv) > 1:
+    if len(GITHUB_TOKEN) < 1:
+        logging.error("Please set GITHUB_TOKEN")
+    elif len(sys.argv) > 1:
+        nltk.download('stopwords')
+        nltk.download('punkt')
         iterationNumber = int(sys.argv[1])
         getRepos(iterationNumber)
         getReadme()
