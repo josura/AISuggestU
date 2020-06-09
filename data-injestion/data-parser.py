@@ -6,6 +6,10 @@ import logging
 import base64
 from github import Github
 from collections import defaultdict
+#removing stopwords
+import nltk
+from nltk.corpus import stopwords 
+from nltk.tokenize import word_tokenize
 
 GITHUB_TOKEN = os.environ['GITHUB_TOKEN']
 logfile='data-parser.log'
@@ -60,6 +64,13 @@ def getRepos(iterationNumber):
     f.close()
     logging.info("Repos written to data.json.")
 
+def removeStopWords(stringToClean,stop_words):
+    word_tokens = word_tokenize(stringToClean.decode('utf-8')) 
+    filtered_sentence = [w for w in word_tokens if not w in stop_words] 
+    return ' '.join(e.encode('utf-8') for e in filtered_sentence)
+
+
+
 def getReadme():
     with open('data.json') as json_file:
         data = json.load(json_file)
@@ -74,8 +85,14 @@ def getReadme():
             logging.warning("Response code isn't 200 {}".format(readmeUrl))
             continue
         
-        readme = json.loads(response.text)['content']
-        repo['readme'] = base64.b64decode(readme)
+        readmedecoded = base64.b64decode(json.loads(response.text)['content'])
+        stop_words = set(stopwords.words('english'))
+        stop_words.add(',')
+        stop_words.add('.')
+        stop_words.add(':')
+        stop_words.add('#')
+        stop_words.add('?')
+        repo['readme'] = removeStopWords(readmedecoded,stop_words)
     
     dumpedData = json.dumps(data)
 
@@ -87,6 +104,8 @@ def getReadme():
 
 
 def main():
+    nltk.download('stopwords')
+    nltk.download('punkt')
     if len(sys.argv) > 1:
         iterationNumber = int(sys.argv[1])
         getRepos(iterationNumber)
