@@ -148,8 +148,6 @@ def getReadme(inputPath, outputPath):
         logging.info("Repos Readme written to fulldata.json.")
         
 
-
-
 def main():
     if len(GITHUB_TOKEN) < 1:
         logging.error("Please set GITHUB_TOKEN")
