@@ -92,7 +92,7 @@ def getReadme():
         stop_words.add(':')
         stop_words.add('#')
         stop_words.add('?')
-        repo['readme'] = removeStopWords(readmedecoded,stop_words)
+        repo['readme'] = removeStopWords(readmedecoded.lower(),stop_words)
     
     dumpedData = json.dumps(data)
 
