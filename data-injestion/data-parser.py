@@ -4,6 +4,7 @@ import os
 import sys
 import logging
 import base64
+import re
 from github import Github
 from collections import defaultdict
 #removing stopwords
@@ -15,6 +16,18 @@ GITHUB_TOKEN = os.environ['GITHUB_TOKEN']
 logfile='data-parser.log'
 logging.basicConfig(filename=logfile, format = '%(asctime)s  %(levelname)-10s %(processName)s  %(name)s %(message)s', level = logging.INFO)
 
+def checkUrlOrApi(link):
+    if link[:8] == "https://api":
+        return True
+    return False
+
+def cleanReadme(readme):
+    readme = re.sub("[^a-zA-Z0-9]+", ' ', readme)
+    readme = re.sub('[0-9]+', "", readme)
+    for _ in range(0, 5):
+        readme = re.sub('[ ]+[a-z|A-Z][ ]+', " ", readme)
+
+    return readme
 
 def cleanLink(value):
     value = value[1:]
@@ -32,14 +45,23 @@ def filterData(data):
     stringDump = "["
 
     for val in pythonObj:
-        repoId, repoUrl, owner =  val['id'], val['url'], val['owner']
+        repoUrl, owner = val['url'], val['owner']['login']
 
-        ownerTemp = {}
+        stringDump += json.dumps({'url': repoUrl, 'owner': owner}) + ","
 
-        ownerTemp['id'] = owner['id']
-        ownerTemp['user'] = owner['login']
+    stringDump = stringDump[:-1]
+    stringDump += ']'
+   
+    return stringDump
 
-        stringDump += json.dumps({'id': repoId, 'url': repoUrl, 'owner': ownerTemp}) + ","
+def filterDailyData(data):
+    pythonObj = json.loads(data)
+    stringDump = "["
+
+    for val in pythonObj:
+        repoUrl, owner = val['url'], val['author']
+
+        stringDump += json.dumps({'url': repoUrl, 'owner': owner}) + ","
 
     stringDump = stringDump[:-1]
     stringDump += ']'
@@ -69,21 +91,43 @@ def getRepos(iterationNumber):
     f.close()
     logging.info("Repos written to data.json.")
 
+def getDailyTrending():
+    f = open("daily-data.json", "w")
+    link = "https://github-trending-api.now.sh/repositories?language=&since=daily"
+
+    data = requests.get(link, headers={'Authorization': 'token ' +  GITHUB_TOKEN})
+
+    if data.status_code != 200:
+        logging.warning("Status code != 200 repo " + link)
+        return False
+    else:
+        filteredData = filterDailyData(data.text)
+        f.write(filteredData.encode('utf-8'))
+        f.close()
+        logging.info("Daily repos written to daily-data.json.")
+        return True
+
 def removeStopWords(stringToClean,stop_words):
     word_tokens = word_tokenize(stringToClean.decode('utf-8')) 
     filtered_sentence = [w for w in word_tokens if not w in stop_words] 
     return ' '.join(e.encode('utf-8') for e in filtered_sentence)
 
+def addStopWords(list, words):
+    for word in words:
+        list.add(word)
 
 
-def getReadme():
-    with open('data.json') as json_file:
+def getReadme(inputPath, outputPath):
+    with open(inputPath) as json_file:
         data = json.load(json_file)
 
     for repo in data:
         repoUrl = repo['url']
-        readmeUrl = getReadmeUrl(repoUrl)
 
+        if not checkUrlOrApi(repoUrl):
+            repoUrl = "https://api.github.com/repos/" + repoUrl[19:]
+
+        readmeUrl = getReadmeUrl(repoUrl)
         response = requests.get(readmeUrl, headers={'Authorization': 'token ' +  GITHUB_TOKEN})
 
         if response.status_code != 200:
@@ -92,17 +136,14 @@ def getReadme():
             continue
         
         readmedecoded = base64.b64decode(json.loads(response.text)['content'])
-        stop_words = set(stopwords.words('english'))
-        stop_words.add(',')
-        stop_words.add('.')
-        stop_words.add(':')
-        stop_words.add('#')
-        stop_words.add('?')
-        repo['readme'] = removeStopWords(readmedecoded.lower(),stop_words)
+        
+        repo['readme'] = cleanReadme(readmedecoded)
+
+        
     
     dumpedData = json.dumps(data)
 
-    with open('fulldata.json', 'w') as json_file:
+    with open(outputPath, 'w') as json_file:
         json_file.write(dumpedData)
         logging.info("Repos Readme written to fulldata.json.")
         
@@ -115,11 +156,20 @@ def main():
     elif len(sys.argv) > 1:
         nltk.download('stopwords')
         nltk.download('punkt')
-        iterationNumber = int(sys.argv[1])
-        getRepos(iterationNumber)
-        getReadme()
+        if sys.argv[1] == "default":
+            if len(sys.argv) > 2:
+                iterationNumber = int(sys.argv[2])
+                getRepos(iterationNumber)
+                getReadme("data.json", "fulldata.json")
+            else:
+                print("Use: python {} default number_of_page".format(sys.argv[0]))
+        elif sys.argv[1] == "daily":
+            if getDailyTrending():
+                getReadme("daily-data.json", "daily-fulldata.json")
     else:
-        print("Use: python {} number_of_page".format(sys.argv[0]))
+        print("Use: python {} mod number_of_page".format(sys.argv[0]))
+        print("default: load batch repos")
+        print("daily: load most recently repos")
 
 
 
