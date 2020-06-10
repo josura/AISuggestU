@@ -17,17 +17,21 @@ logfile='data-parser.log'
 logging.basicConfig(filename=logfile, format = '%(asctime)s  %(levelname)-10s %(processName)s  %(name)s %(message)s', level = logging.INFO)
 
 def checkUrlOrApi(link):
-    if link[:8] == "https://api":
-        return True
-    return False
+    return "api" in link
+
+def removeStopWords(stringToClean,stop_words):
+    word_tokens = word_tokenize(stringToClean.decode('utf-8')) 
+    filtered_sentence = [w for w in word_tokens if not w in stop_words] 
+    return ' '.join(e.encode('utf-8') for e in filtered_sentence)
 
 def cleanReadme(readme):
     readme = re.sub("[^a-zA-Z0-9]+", ' ', readme)
     readme = re.sub('[0-9]+', "", readme)
     for _ in range(0, 5):
         readme = re.sub('[ ]+[a-z|A-Z][ ]+', " ", readme)
+    stop_words = set(stopwords.words('english'))
 
-    return readme
+    return removeStopWords(readme.lower(),stop_words)
 
 def cleanLink(value):
     value = value[1:]
@@ -68,9 +72,6 @@ def filterDailyData(data):
    
     return stringDump
 
-def getReadmeUrl(repoUrl):
-    return repoUrl + "/readme"
-
 
 def getRepos(iterationNumber):
     f = open("data.json", "w")
@@ -107,11 +108,6 @@ def getDailyTrending():
         logging.info("Daily repos written to daily-data.json.")
         return True
 
-def removeStopWords(stringToClean,stop_words):
-    word_tokens = word_tokenize(stringToClean.decode('utf-8')) 
-    filtered_sentence = [w for w in word_tokens if not w in stop_words] 
-    return ' '.join(e.encode('utf-8') for e in filtered_sentence)
-
 def addStopWords(list, words):
     for word in words:
         list.add(word)
@@ -122,12 +118,10 @@ def getReadme(inputPath, outputPath):
         data = json.load(json_file)
 
     for repo in data:
-        repoUrl = repo['url']
+        readmeUrl = repo['url'] + "/readme"
+        if not checkUrlOrApi(readmeUrl):
+            readmeUrl = "https://api.github.com/repos/" + readmeUrl[19:]
 
-        if not checkUrlOrApi(repoUrl):
-            repoUrl = "https://api.github.com/repos/" + repoUrl[19:]
-
-        readmeUrl = getReadmeUrl(repoUrl)
         response = requests.get(readmeUrl, headers={'Authorization': 'token ' +  GITHUB_TOKEN})
 
         if response.status_code != 200:
@@ -138,9 +132,7 @@ def getReadme(inputPath, outputPath):
         readmedecoded = base64.b64decode(json.loads(response.text)['content'])
         
         repo['readme'] = cleanReadme(readmedecoded)
-
-        
-    
+ 
     dumpedData = json.dumps(data)
 
     with open(outputPath, 'w') as json_file:
