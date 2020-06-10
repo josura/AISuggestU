@@ -17,7 +17,7 @@ logfile='data-parser.log'
 logging.basicConfig(filename=logfile, format = '%(asctime)s  %(levelname)-10s %(processName)s  %(name)s %(message)s', level = logging.INFO)
 
 def checkUrlOrApi(link):
-    return "api" in link
+    return "https://api" in link
 
 def removeStopWords(stringToClean,stop_words):
     word_tokens = word_tokenize(stringToClean.decode('utf-8')) 
