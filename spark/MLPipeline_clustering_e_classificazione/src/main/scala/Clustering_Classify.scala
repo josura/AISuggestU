@@ -5,6 +5,7 @@ import org.apache.spark.ml.feature.{HashingTF, Tokenizer}
 import org.apache.spark.ml.clustering.LDA
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.sql.Row
+import org.apache.spark.sql.Dataset
 
 object Clustering_Classify {
   def main(args: Array[String]) {
@@ -15,6 +16,13 @@ object Clustering_Classify {
         .getOrCreate()
     //TODO Data ingestion e streaming delle repository
 
+    var numcluster :Int = 10
+    var numiter:Int=10
+    val lda = new LDA().setK(numcluster).setMaxIter(numiter)
+    val model = lda.fit(dataset)
+    // Prepare training repos from a list of (id, text-readme, label) tuples.
+    //labels are deducted from previous clustering
+
     val tokenizer = new Tokenizer()
         .setInputCol("text")
         .setOutputCol("words")
@@ -22,12 +30,11 @@ object Clustering_Classify {
         .setNumFeatures(1000)
         .setInputCol(tokenizer.getOutputCol)
         .setOutputCol("features")
-    val lda = new LDA().setK(10).setMaxIter(10)
-        .setInputCol(hashingTF.getOutputCol)
-        .setOutputCol("Cluster")
 
     //TODO Decision of the model, probably based on the decisions of layer before in the pipeline
     val pipeline = new Pipeline()
         .setStages(Array(tokenizer, hashingTF, lda))
+
+    val model = pipeline.fit()//dati
   }
 }
