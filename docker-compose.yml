@@ -23,13 +23,37 @@ services:
             - "7077:7077"
     zoo:
         image: zookeeper:3.4.9
+        network_mode: host
         restart: unless-stopped
-        hostname: zoo
-        ports:
-            - "2181:2181"
+        #hostname: zoo
+        # ports:
+        #     - "2181:2181"
     kafka:
         image: confluentinc/cp-kafka:5.5.0
-        hostname: kafka
-        ports:
-            - "9092:9092"
+        network_mode: host
+        #hostname: kafka
+        environment:
+            - KAFKA_ZOOKEEPER_CONNECT=localhost:2181
+            - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+        depends_on:
+            - zoo
+        # ports:
+        #     - "9092:9092"
+    daily-producer:
+        build: dailyProducer
+        network_mode: host
+        #hostname: daily-producer
+        stdin_open: true
+        tty: true
+        volumes:
+            - ./dailyProducer/:/shared/
+    daily-consumer:
+        build: dailyConsumer
+        network_mode: host
+        stdin_open: true
+        tty: true
+        volumes:
+            - ./dailyConsumer/:/shared/
+
+
 
