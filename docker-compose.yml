@@ -3,57 +3,68 @@ version: "3"
 services:
     elastic-search:
         image: docker.elastic.co/elasticsearch/elasticsearch:7.7.0
+        networks:
+            - aisuggestu
         environment:
             - discovery.type=single-node
-        ports:
-            - "9200:9200"
-            - "9300:9300"
+        # ports:
+        #     - "9200:9200"
+        #     - "9300:9300"
     publish-to-elastic:
         build: ./publish-to-elastic/docker
-        network_mode: host
+        networks:
+            - aisuggestu
         stdin_open: true
         tty: true  
         volumes:
             - ./publish-to-elastic/:/shared/
     spark-master:
         image: bde2020/spark-master:2.4.5-hadoop2.7
+        networks:
+            - aisuggestu
         container_name: spark-master
         ports:
             - "8080:8080"
             - "7077:7077"
     zoo:
         image: zookeeper:3.4.9
-        network_mode: host
+        networks:
+            - aisuggestu
         restart: unless-stopped
-        #hostname: zoo
-        # ports:
-        #     - "2181:2181"
+        hostname: zoo
+        ports:
+            - "2181:2181"
     kafka:
         image: confluentinc/cp-kafka:5.5.0
-        network_mode: host
-        #hostname: kafka
+        networks:
+            - aisuggestu
         environment:
-            - KAFKA_ZOOKEEPER_CONNECT=localhost:2181
-            - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+            - KAFKA_ZOOKEEPER_CONNECT=zoo:2181
+            - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+            - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT
         depends_on:
             - zoo
-        # ports:
-        #     - "9092:9092"
+        ports:
+            - "9092:9092"
     daily-producer:
         build: dailyProducer
-        network_mode: host
-        #hostname: daily-producer
+        networks:
+            - aisuggestu
         stdin_open: true
         tty: true
         volumes:
             - ./dailyProducer/:/shared/
+            - ./dailyProducer/daily-fulldata.json:/go/src/app/daily-fulldata.json
     daily-consumer:
         build: dailyConsumer
-        network_mode: host
+        networks:
+            - aisuggestu
         stdin_open: true
         tty: true
         volumes:
             - ./dailyConsumer/:/shared/
 
 
-
+networks:
+    aisuggestu:
+        external: false
