@@ -9,10 +9,25 @@ import (
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 )
 
-type Repository []struct {
+//Repositories rappresents all daily repos
+type Repositories []struct {
 	URL    string `json:"url"`
 	Owner  string `json:"owner"`
 	Readme string `json:"readme"`
+}
+
+func loadDailyRepos() Repositories {
+	dailyReposFile, err := os.Open("daily-fulldata.json")
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	byteValue, _ := ioutil.ReadAll(dailyReposFile)
+	var repos Repositories
+	json.Unmarshal(byteValue, &repos)
+
+	return repos
 }
 
 func main() {
@@ -38,15 +53,8 @@ func main() {
 		}
 	}()
 
-	dailyReposFile, err := os.Open("daily-fulldata.json")
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	byteValue, _ := ioutil.ReadAll(dailyReposFile)
-	var repos Repository
-	json.Unmarshal(byteValue, &repos)
+	//Load json data
+	repos := loadDailyRepos()
 
 	// Produce messages to topic (asynchronously)
 	topic := "daily-repos"
