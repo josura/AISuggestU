@@ -50,19 +50,12 @@ services:
         build: dailyProducer
         networks:
             - aisuggestu
-        stdin_open: true
-        tty: true
         volumes:
-            - ./dailyProducer/:/shared/
             - ./dailyProducer/daily-fulldata.json:/go/src/app/daily-fulldata.json
     daily-consumer:
         build: dailyConsumer
         networks:
             - aisuggestu
-        stdin_open: true
-        tty: true
-        volumes:
-            - ./dailyConsumer/:/shared/
 
 
 networks:
