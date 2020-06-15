@@ -13,7 +13,8 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 
 GITHUB_TOKEN = os.environ['GITHUB_TOKEN']
-logfile='data-parser.log'
+DATAPATH = "/data/"
+logfile='/dev/stdout'
 logging.basicConfig(filename=logfile, format = '%(asctime)s  %(levelname)-10s %(processName)s  %(name)s %(message)s', level = logging.INFO)
 
 def checkUrlOrApi(link):
@@ -74,7 +75,7 @@ def filterDailyData(data):
 
 
 def getRepos(iterationNumber):
-    f = open("data.json", "w")
+    f = open(DATAPATH + "data.json", "w")
     link = "https://api.github.com/repositories"
 
     for _ in range(0, iterationNumber):
@@ -93,7 +94,7 @@ def getRepos(iterationNumber):
     logging.info("Repos written to data.json.")
 
 def getDailyTrending():
-    f = open("daily-data.json", "w")
+    f = open(DATAPATH + "daily-data.json", "w")
     link = "https://github-trending-api.now.sh/repositories?language=&since=daily"
 
     data = requests.get(link, headers={'Authorization': 'token ' +  GITHUB_TOKEN})
@@ -103,7 +104,7 @@ def getDailyTrending():
         return False
     else:
         filteredData = filterDailyData(data.text)
-        f.write(filteredData.encode('utf-8'))
+        f.write((filteredData))
         f.close()
         logging.info("Daily repos written to daily-data.json.")
         return True
@@ -150,12 +151,12 @@ def main():
             if len(sys.argv) > 2:
                 iterationNumber = int(sys.argv[2])
                 getRepos(iterationNumber)
-                getReadme("data.json", "fulldata.json")
+                getReadme(DATAPATH + "data.json", DATAPATH + "fulldata.json")
             else:
                 print("Use: python {} default number_of_page".format(sys.argv[0]))
         elif sys.argv[1] == "daily":
             if getDailyTrending():
-                getReadme("daily-data.json", "daily-fulldata.json")
+                getReadme(DATAPATH + "daily-data.json", DATAPATH + "daily-fulldata.json")
     else:
         print("Use: python {} mod number_of_page".format(sys.argv[0]))
         print("default: load batch repos")

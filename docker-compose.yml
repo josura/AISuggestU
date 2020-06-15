@@ -47,6 +47,12 @@ services:
             - zoo
         ports:
             - "9092:9092"
+    data-ingestion:
+        build: dataIngestion
+        environment: 
+            - GITHUB_TOKEN="TOKEN"
+        volumes:
+            - data-ingestion:/data/
     daily-producer:
         build: dailyProducer
         networks:
@@ -62,3 +68,6 @@ services:
 networks:
     aisuggestu:
         external: false
+
+volumes:
+    data-ingestion: 
