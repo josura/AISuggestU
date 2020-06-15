@@ -65,7 +65,7 @@ func main() {
 	body, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
-		fmt.Println("Bla bla")
+		panic(err)
 	}
 
 	var results []map[string]interface{}
