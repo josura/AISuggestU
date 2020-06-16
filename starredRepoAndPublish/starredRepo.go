@@ -16,6 +16,16 @@ type Message struct {
 	URLRepo string `json:"url_repo"`
 }
 
+func initKafkaProducer() *kafka.Producer {
+	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "kafka:9092"})
+
+	if err != nil {
+		panic(err)
+	}
+
+	return p
+}
+
 func userStarred(p *kafka.Producer, val []byte) {
 	topic := "user-starred-repos"
 
@@ -32,14 +42,6 @@ func main() {
 	if len(argsWithoutProg) < 1 {
 		os.Exit(1)
 	}
-
-	p, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "kafka:9092"})
-
-	if err != nil {
-		panic(err)
-	}
-
-	defer p.Close()
 
 	url := fmt.Sprintf("https://api.github.com/users/%s/starred?per_page=100", argsWithoutProg[0])
 
@@ -58,6 +60,8 @@ func main() {
 	var results []map[string]interface{}
 
 	json.Unmarshal([]byte(body), &results)
+
+	p := initKafkaProducer()
 
 	for _, result := range results {
 		url := fmt.Sprintf("%s", result["url"])
