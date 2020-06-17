@@ -5,12 +5,15 @@ FROM hseeberger/scala-sbt:8u222_${SBT_VER}_${SCALA_VER}
 ENV SPARK_VERSION=2.4.5
 ENV SPARK_HOME /opt/spark
 
-ADD sparkdir/spark-${SPARK_VERSION}-bin-hadoop2.7.tgz /opt
+#ADD sparkdir/spark-${SPARK_VERSION}-bin-hadoop2.7.tgz /opt
 
-RUN ln -s /opt/spark-${SPARK_VERSION}-bin-hadoop2.7 ${SPARK_HOME}
+#RUN ln -s /opt/spark-${SPARK_VERSION}-bin-hadoop2.7 ${SPARK_HOME}
 
-COPY Collaborative_filtering/ /opt/test_textMining/
 
-WORKDIR /opt/test_textMining
+#COPY Collaborative_filtering/ /opt/test_textMining/
+#COPY MLPipeline_clustering_e_classificazione/ /opt/test_textMining/
 
-CMD [ "sbt", "run" ]
+#WORKDIR /opt/test_textMining
+
+CMD [ "bash" ]
+

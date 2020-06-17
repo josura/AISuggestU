@@ -2,3 +2,4 @@ project/*
 target/*
 .metals/*
 .bloop/*
+*.json
