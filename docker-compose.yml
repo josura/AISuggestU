@@ -67,6 +67,13 @@ services:
         build: starredRepoAndPublish
         networks:
             - aisuggestu
+    spark-consumer-classifier:
+        build: spark
+        networks: 
+            - aisuggestu
+        volumes:
+            - ./spark/MLPipeline_clustering_e_classificazione:/opt/classificazione_e_clustering
+        
 
 
 networks:
