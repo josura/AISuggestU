@@ -13,7 +13,8 @@ ENV SPARK_HOME /opt/spark
 #COPY Collaborative_filtering/ /opt/test_textMining/
 #COPY MLPipeline_clustering_e_classificazione/ /opt/test_textMining/
 
-#WORKDIR /opt/test_textMining
+WORKDIR /opt/classificazione_e_clustering
 
-CMD [ "bash" ]
+#CMD [ "bash" ]
 
+CMD ["sbt","run"]
