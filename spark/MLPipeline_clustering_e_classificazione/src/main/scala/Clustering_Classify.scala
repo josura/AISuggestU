@@ -8,7 +8,12 @@ import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.types.IntegerType
 
+//elastic
+import org.elasticsearch.spark.sql._
 
+//naive bayes
+import org.apache.spark.ml.classification.NaiveBayes
+import org.apache.spark.ml.classification.NaiveBayesModel
 
 //kafka streaming
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -30,18 +35,13 @@ import org.apache.spark.ml.clustering.KMeans
 import org.apache.spark.ml.evaluation.ClusteringEvaluator
 import org.apache.spark.ml.classification.MultilayerPerceptronClassifier
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
-//random forest
-import org.apache.spark.ml.Pipeline
-import org.apache.spark.ml.classification.{GBTClassificationModel, GBTClassifier}
-import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
-import org.apache.spark.ml.feature.{IndexToString, StringIndexer, VectorIndexer}
-//naive bayes
-import org.apache.spark.ml.classification.NaiveBayes
-import org.apache.spark.ml.classification.NaiveBayesModel
+
+
 
 
 
 object Clustering_Classify {
+  case class repositorieClassified(url:String,owner:String,label:Int)
   def cleanRepos(readme:Dataset[Row]):Dataset[Row] = {
     return readme.na.drop.filter(length(readme("readme"))>3)
   }
@@ -65,19 +65,7 @@ object Clustering_Classify {
     val trainer = new MultilayerPerceptronClassifier().setLayers(layers).setBlockSize(128).setSeed(1234L).setMaxIter(100)
     new Pipeline().setStages(Array(tokenizer, hashingTF, trainer))
   }
-  def createPipelineRandomForest(data:Dataset[Row]):Pipeline={
-    val labelIndexer = new StringIndexer().setInputCol("label").setOutputCol("indexedLabel").fit(data)
-    // Automatically identify categorical features, and index them.
-    // Set maxCategories so features with > 4 distinct values are treated as continuous.
-    val featureIndexer = new VectorIndexer().setInputCol("features").setOutputCol("indexedFeatures").setMaxCategories(4).fit(data)
-    // Train a GBT model.
-    val gbt = new GBTClassifier().setLabelCol("indexedLabel").setFeaturesCol("indexedFeatures").setMaxIter(10).setFeatureSubsetStrategy("auto")
-    // Convert indexed labels back to original labels.
-    val labelConverter = new IndexToString().setInputCol("prediction").setOutputCol("predictedLabel").setLabels(labelIndexer.labels)
-    // Chain indexers and GBT in a Pipeline.
-    return new Pipeline().setStages(Array(labelIndexer, featureIndexer, gbt, labelConverter))
-
-  }
+  
 
   def predictNewReposLabel(oldRepos:Dataset[Row],newRepos:Dataset[Row],model:PipelineModel):Dataset[Row] = {
     val pipelineTokenizer = createPipelineTokenizer() 
@@ -85,14 +73,15 @@ object Clustering_Classify {
     val newReposWithFeatures = pipelineTokenizer.fit(oldRepos union newRepos) transform newRepos
     return model transform newReposWithFeatures
   }
-  def notmain(args: Array[String]) {
-    val spark = SparkSession.builder.appName("Clustering and classification pipelines").master("local").getOrCreate()
+  def main(args: Array[String]) {
+    val spark = SparkSession.builder.appName("Clustering and classification pipelines").
+    config("es.nodes","elastic-search").config("es.index.auto.create", "true").config("es.port","9200").//config("es.nodes.wan.only", "true").
+    master("local[*]").getOrCreate()
     //TODO Data ingestion e streaming delle repository
     // keep attention on the types returned
     spark.sparkContext.setLogLevel("ERROR")
-    val readme: Dataset[Row]= spark.read.json("fulldata.json")
+    val readme: Dataset[Row]=  cleanRepos(spark.read.json("fulldata.json"))
     //readme = readme.dropDuplicates("owner")
-    val readmeClean = cleanRepos(readme)
     //case class RepoTyped(url:String,owner:String,readme:String)
     //val readmeDS=readme.as[RepoTyped]
     // Prepare training repos from a list of (id, text-readme, label) tuples.
@@ -101,9 +90,8 @@ object Clustering_Classify {
     //TODO Decision of the model, probably based on the decisions of layer before in the pipeline
     val pipeline = createPipelineKmeans(10)
 
-    val model = pipeline fit readmeClean
-    val predictions = (model transform readmeClean).withColumnRenamed("prediction","label")
-    //TODO streaming o simil streaming(with kafka), for now simulating with local data
+    val model = pipeline fit readme
+    val predictions = (model transform readme).withColumnRenamed("prediction","label")
     //val DailyReadme: Dataset[Row]= spark.read.json("/home/josura/Desktop/AISuggestU/spark/MLPipeline_clustering_e_classificazione/daily-fulldata.json")
     //val DailyReadmeClean = cleanRepos(DailyReadme)
     
@@ -154,17 +142,19 @@ object Clustering_Classify {
     
 
     //da modificare
-    var newpredictions:Dataset[Row]=predictNewReposLabel(readmeClean,reposDaily,bayesmodel)
-    //caricamento su elastic search
-    val query = predictions.writeStream 
-      .outputMode("append") 
-      .queryName("writing_to_es") 
-      .format("org.elasticsearch.spark.sql") 
-      .option("checkpointLocation", "/tmp/") 
-      .option("es.resource", "index/type") 
-      .option("es.nodes", "elastic-search") 
-      .start()
+    val newpredictions:Dataset[Row]=predictNewReposLabel(readme,reposDaily,bayesmodel)
+    val repoPredictions:Dataset[repositorieClassified]= newpredictions.select()
 
-    query.awaitTermination()
+    //newpredictions.writeStream.format("console").outputMode("append").start().awaitTermination()
+    //caricamento su elastic search
+    /*val query = newpredictions.writeStream .outputMode("append") .queryName("writing_to_es")  .format("org.elasticsearch.spark.sql").option("checkpointLocation", "/tmp/").option("es.resource", "repository/classified").option("es.nodes", "elastic-search:9200") 
+      .start()
+    query.awaitTermination()*/
+    import org.elasticsearch.spark.sql._
+    import spark.implicits._
+
+    val repositoriesTyped = newpredictions.select(col("url"),col("owner"),col("prediction").cast(IntegerType).as("label")).as[repositoriesTyped]
+    repositoriesTyped.writeStream.outputMode("append").format("es").option("checkpointLocation","/tmp").option("es.mapping.id","url").start("repositories/classified").awaitTermination
+
   }
 }
