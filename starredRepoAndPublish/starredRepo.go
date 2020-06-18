@@ -108,8 +108,6 @@ func main() {
 
 	client := &http.Client{}
 	req, _ := http.NewRequest("GET", url, nil)
-
-	fmt.Println(getGithubTokenHeader())
 	req.Header.Set("Authorization", getGithubTokenHeader())
 
 	resp, err := client.Do(req)
