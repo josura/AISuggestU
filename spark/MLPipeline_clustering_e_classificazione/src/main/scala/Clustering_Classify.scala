@@ -80,7 +80,7 @@ object Clustering_Classify {
     //TODO Data ingestion e streaming delle repository
     // keep attention on the types returned
     spark.sparkContext.setLogLevel("ERROR")
-    val readme: Dataset[Row]=  cleanRepos(spark.read.json("fulldata.json"))
+    val readme: Dataset[Row]=  cleanRepos(spark.read.json("data/fulldata.json"))
     //readme = readme.dropDuplicates("owner")
     //case class RepoTyped(url:String,owner:String,readme:String)
     //val readmeDS=readme.as[RepoTyped]
@@ -92,8 +92,6 @@ object Clustering_Classify {
 
     val model = pipeline fit readme
     val predictions = (model transform readme).withColumnRenamed("prediction","label")
-    //val DailyReadme: Dataset[Row]= spark.read.json("/home/josura/Desktop/AISuggestU/spark/MLPipeline_clustering_e_classificazione/daily-fulldata.json")
-    //val DailyReadmeClean = cleanRepos(DailyReadme)
     
     /*try {
       // Create context with 2 second batch interval

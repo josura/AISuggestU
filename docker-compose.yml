@@ -7,9 +7,9 @@ services:
             - aisuggestu
         environment:
             - discovery.type=single-node
-        # ports:
-        #     - "9200:9200"
-        #     - "9300:9300"
+        ports:
+            - "9200:9200"
+            - "9300:9300"
     publish-to-elastic:
         build: ./publish-to-elastic/docker
         networks:
@@ -52,7 +52,7 @@ services:
         environment: 
             - GITHUB_TOKEN="TOKEN"
         volumes:
-            - data-ingestion:/data/
+            - ./data/:/data/
     daily-producer:
         build: dailyProducer
         networks:
@@ -73,6 +73,7 @@ services:
             - aisuggestu
         volumes:
             - ./spark/MLPipeline_clustering_e_classificazione:/opt/classificazione_e_clustering
+            - ./data/:/opt/classificazione_e_clustering/data/
         
 
 
