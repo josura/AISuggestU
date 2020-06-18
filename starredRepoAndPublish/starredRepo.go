@@ -7,7 +7,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"regexp"
 
+	"github.com/bbalet/stopwords"
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 )
 
@@ -65,6 +67,20 @@ func base64ToString(value string) (string, error) {
 	return string(converted), err
 }
 
+func cleanReadme(text *string) {
+	reg := regexp.MustCompile(`[^a-zA-Z0-9]+`)
+	*text = reg.ReplaceAllString(*text, " ")
+	reg = regexp.MustCompile(`[0-9]+`)
+	*text = reg.ReplaceAllString(*text, " ")
+
+	for i := 0; i < 5; i++ {
+		reg = regexp.MustCompile(`[ ]+[a-z|A-Z][ ]+`)
+		*text = reg.ReplaceAllString(*text, " ")
+	}
+
+	*text = stopwords.CleanString(*text, "en", true)
+}
+
 func getReadme(url string) (string, error) {
 	readmeURL := url + "/readme"
 
@@ -92,6 +108,7 @@ func getReadme(url string) (string, error) {
 	}
 
 	readme, err := base64ToString(bodyStruct.Content)
+	cleanReadme(&readme)
 
 	return readme, err
 }
