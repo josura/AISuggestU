@@ -17,4 +17,4 @@ WORKDIR /opt/classificazione_e_clustering
 
 #CMD [ "bash" ]
 
-CMD ["sbt","run"]
+CMD ["sbt"]
