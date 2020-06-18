@@ -143,7 +143,6 @@ object Clustering_Classify {
 
     //da modificare
     val newpredictions:Dataset[Row]=predictNewReposLabel(readme,reposDaily,bayesmodel)
-    val repoPredictions:Dataset[repositorieClassified]= newpredictions.select()
 
     //newpredictions.writeStream.format("console").outputMode("append").start().awaitTermination()
     //caricamento su elastic search
@@ -153,7 +152,7 @@ object Clustering_Classify {
     import org.elasticsearch.spark.sql._
     import spark.implicits._
 
-    val repositoriesTyped = newpredictions.select(col("url"),col("owner"),col("prediction").cast(IntegerType).as("label")).as[repositoriesTyped]
+    val repositoriesTyped = newpredictions.select(col("url"),col("owner"),col("prediction").cast(IntegerType).as("label")).as[repositorieClassified]
     repositoriesTyped.writeStream.outputMode("append").format("es").option("checkpointLocation","/tmp").option("es.mapping.id","url").start("repositories/classified").awaitTermination
 
   }
