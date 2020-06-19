@@ -65,6 +65,8 @@ services:
             - aisuggestu
     starred-repos-publish:
         build: starredRepoAndPublish
+        environment: 
+            - GITHUB_TOKEN="TOKEN"
         networks:
             - aisuggestu
     spark-consumer-classifier:
