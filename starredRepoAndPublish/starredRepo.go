@@ -14,7 +14,7 @@ import (
 )
 
 type Message struct {
-	User    string `json:"user"`
+	Owner   string `json:"owner"`
 	URLRepo string `json:"url_repo"`
 	Readme  string `json:"readme"`
 }
