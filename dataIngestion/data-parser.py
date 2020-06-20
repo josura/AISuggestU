@@ -21,13 +21,14 @@ def checkUrlOrApi(link):
     return "https://api" in link
 
 def removeStopWords(stringToClean,stop_words):
-    word_tokens = word_tokenize(stringToClean.decode('utf-8')) 
+    word_tokens = word_tokenize(str(stringToClean)) 
     filtered_sentence = [w for w in word_tokens if not w in stop_words] 
-    return ' '.join(e.encode('utf-8') for e in filtered_sentence)
+    return ' '.join(e for e in filtered_sentence)
 
 def cleanReadme(readme):
+    readme = readme.strip().replace('\\n', '')
     readme = re.sub("[^a-zA-Z0-9]+", ' ', readme)
-    readme = re.sub('[0-9]+', "", readme)
+    readme = re.sub('[0-9]+', " ", readme)
     for _ in range(0, 5):
         readme = re.sub('[ ]+[a-z|A-Z][ ]+', " ", readme)
     stop_words = set(stopwords.words('english'))
@@ -130,7 +131,7 @@ def getReadme(inputPath, outputPath):
             logging.warning("Response code isn't 200 {}".format(readmeUrl))
             continue
         
-        readmedecoded = base64.b64decode(json.loads(response.text)['content'])
+        readmedecoded = str(base64.b64decode(json.loads(response.text)['content']))
         
         repo['readme'] = cleanReadme(readmedecoded)
  
