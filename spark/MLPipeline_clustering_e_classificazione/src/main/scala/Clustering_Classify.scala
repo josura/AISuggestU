@@ -77,81 +77,44 @@ object Clustering_Classify {
     val spark = SparkSession.builder.appName("Clustering and classification pipelines").
     config("es.nodes","elastic-search").config("es.index.auto.create", "true").config("es.port","9200").//config("es.nodes.wan.only", "true").
     master("local[*]").getOrCreate()
-    //TODO Data ingestion e streaming delle repository
     // keep attention on the types returned
     spark.sparkContext.setLogLevel("ERROR")
-    val readme: Dataset[Row]=  cleanRepos(spark.read.json("data/fulldata.json"))
-    //readme = readme.dropDuplicates("owner")
-    //case class RepoTyped(url:String,owner:String,readme:String)
-    //val readmeDS=readme.as[RepoTyped]
-    // Prepare training repos from a list of (id, text-readme, label) tuples.
-    //labels are deducted from previous clustering
-
-    //TODO Decision of the model, probably based on the decisions of layer before in the pipeline
-    val pipeline = createPipelineKmeans(10)
-
-    val model = pipeline fit readme
-    val predictions = (model transform readme).withColumnRenamed("prediction","label")
-    
-    /*try {
-      // Create context with 2 second batch interval
-      val streamingContext = new StreamingContext(spark.sparkContext, Seconds(5))
-      val kafkaParams = Map[String, Object](
-        "bootstrap.servers" -> "kafka:9092",
-        "key.deserializer" -> classOf[StringDeserializer],
-        "value.deserializer" -> classOf[StringDeserializer],
-        "group.id" -> "dailyrepo_group",
-        "auto.offset.reset" -> "latest",
-        "enable.auto.commit" -> (false: java.lang.Boolean)
-      )
+    try{
+      val readme: Dataset[Row]=  cleanRepos(spark.read.json("data/fulldata.json"))
       
-      val topics = Array("daily-repos")
-      val stream = KafkaUtils.createDirectStream[String, String](
-        streamingContext,
-        PreferConsistent,
-        Subscribe[String, String](topics, kafkaParams)
-      )
+      val pipeline = createPipelineKmeans(10)
 
-      val messageStreaming = stream.map(record => (record.value))
+      val model = pipeline fit readme
+      val predictions = (model transform readme).withColumnRenamed("prediction","label")
+      
+      //creazione modello classificazione
+      val bayesPipeline = new Pipeline().setStages( Array(new NaiveBayes))
 
+      val bayesmodel = bayesPipeline fit predictions
+
+      
+      
+      val fulldf = spark.readStream.format("kafka").option("kafka.bootstrap.servers","kafka:9092").option("subscribe","daily-repos, user-starred-repos").load()
+      val repoStringDF = fulldf.selectExpr("CAST(value AS STRING)")
+      val schemaRepo = new StructType().add("url",StringType).add("owner",StringType).add("readme",StringType)
+      val reposDaily= cleanRepos(repoStringDF.select(from_json(col("value"),schemaRepo).as("data")).select("data.*"))
+      
+      
+
+      //da modificare
+      val newpredictions:Dataset[Row]=predictNewReposLabel(readme,reposDaily,bayesmodel)
+
+      val consoleStream = newpredictions.writeStream.format("console").outputMode("append").start()
+      //caricamento su elastic search
+      import org.elasticsearch.spark.sql._
       import spark.implicits._
 
-      //val messageStreamingDF = messageStreaming.map(rdd=>rdd.map(recordstr=>spark.read.json(Seq(recordstr.toString()).toDS)))
-      val messageStreamingDF = messageStreaming.map(stringa=>spark.read.json(Seq(stringa).toDS))
-
-      messageStreamingDF.foreachRDD(rdd=> rdd.foreach(_.show))
-      streamingContext.start()
-      streamingContext.awaitTermination()
+      val repositoriesTyped = newpredictions.select(col("url"),col("owner"),col("prediction").cast(IntegerType).as("label")).as[repositorieClassified]
+      val elasticStream =repositoriesTyped.writeStream.outputMode("append").
+        format("es").option("checkpointLocation","/tmp").
+        option("es.mapping.id","url").start("repositories/classified").awaitTermination
     } catch {
       case e:Exception=>{spark.stop()}
-    }*/
-    //creazione modello classificazione
-    val bayesPipeline = new Pipeline().setStages( Array(new NaiveBayes))
-
-    val bayesmodel = bayesPipeline fit predictions
-
-    
-    
-    val fulldf = spark.readStream.format("kafka").option("kafka.bootstrap.servers","kafka:9092").option("subscribe","daily-repos, user-starred-repos").load()
-    val repoStringDF = fulldf.selectExpr("CAST(value AS STRING)")
-    val schemaRepo = new StructType().add("url",StringType).add("owner",StringType).add("readme",StringType)
-    val reposDaily= cleanRepos(repoStringDF.select(from_json(col("value"),schemaRepo).as("data")).select("data.*"))
-    
-    
-
-    //da modificare
-    val newpredictions:Dataset[Row]=predictNewReposLabel(readme,reposDaily,bayesmodel)
-
-    //newpredictions.writeStream.format("console").outputMode("append").start().awaitTermination()
-    //caricamento su elastic search
-    /*val query = newpredictions.writeStream .outputMode("append") .queryName("writing_to_es")  .format("org.elasticsearch.spark.sql").option("checkpointLocation", "/tmp/").option("es.resource", "repository/classified").option("es.nodes", "elastic-search:9200") 
-      .start()
-    query.awaitTermination()*/
-    import org.elasticsearch.spark.sql._
-    import spark.implicits._
-
-    val repositoriesTyped = newpredictions.select(col("url"),col("owner"),col("prediction").cast(IntegerType).as("label")).as[repositorieClassified]
-    repositoriesTyped.writeStream.outputMode("append").format("es").option("checkpointLocation","/tmp").option("es.mapping.id","url").start("repositories/classified").awaitTermination
-
+    }
   }
 }
