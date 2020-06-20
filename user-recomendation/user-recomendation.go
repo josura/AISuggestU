@@ -1,116 +1,108 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
-	"log"
-	"strings"
+	"fmt"
+	"reflect"
 
-	elasticsearch "github.com/elastic/go-elasticsearch/v7"
+	"github.com/olivere/elastic"
 )
 
+// ClassifiedRepo is a structure used for serializing/deserializing data in Elasticsearch.
+type ClassifiedRepo struct {
+	URL   string `json:"url"`
+	Owner string `json:"owner"`
+	Label int    `json:"label"`
+}
+
+func contains(s []int, e int) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
+
 func main() {
-	// Allow for custom formatting of log output
-	log.SetFlags(0)
+	ctx := context.Background()
 
-	// Create a context object for the API calls
-	//ctx := context.Background()
-
-	// Declare an Elasticsearch configuration
-	// Declare an Elasticsearch configuration
-	cfg := elasticsearch.Config{
-		Addresses: []string{
-			"http://localhost:9200",
-		},
-	}
-
-	var (
-		r map[string]interface{}
-		//wg sync.WaitGroup
-	)
-
-	// Instantiate a new Elasticsearch client object instance
-	es, err := elasticsearch.NewClient(cfg)
-
-	// Exit the system if connection raises an error
+	// Obtain a client and connect to the default Elasticsearch installation
+	// on 127.0.0.1:9200. Of course you can configure your client to connect
+	// to other hosts and configure it in various other ways.
+	client, err := elastic.NewClient()
 	if err != nil {
-		log.Fatalf("Elasticsearch connection error:", err)
+		// Handle error
+		panic(err)
 	}
 
-	res, err := es.Info()
+	// Ping the Elasticsearch server to get e.g. the version number
+	info, code, err := client.Ping("http://127.0.0.1:9200").Do(ctx)
 	if err != nil {
-		log.Fatalf("Error getting response: %s", err)
+		// Handle error
+		panic(err)
 	}
-	defer res.Body.Close()
-	// Check response status
-	if res.IsError() {
-		log.Fatalf("Error: %s", res.String())
-	}
-	// Deserialize the response into a map.
-	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
-		log.Fatalf("Error parsing the response body: %s", err)
-	}
-	// Print client and server version numbers.
-	log.Printf("Client: %s", elasticsearch.Version)
-	log.Printf("Server: %s", r["version"].(map[string]interface{})["number"])
-	log.Println(strings.Repeat("~", 37))
+	fmt.Printf("Elasticsearch returned with code %d and version %s\n", code, info.Version.Number)
 
-	var buf bytes.Buffer
-	query := map[string]interface{}{
-		"query": map[string]interface{}{
-			"match": map[string]interface{}{
-				"owner": "herbrant",
-			},
-		},
-	}
-	if err := json.NewEncoder(&buf).Encode(query); err != nil {
-		log.Fatalf("Error encoding query: %s", err)
-	}
-
-	// Perform the search request.
-	res, err = es.Search(
-		es.Search.WithContext(context.Background()),
-		es.Search.WithIndex("repositories"),
-		es.Search.WithBody(&buf),
-		es.Search.WithTrackTotalHits(true),
-		es.Search.WithPretty(),
-	)
+	// Getting the ES version number is quite common, so there's a shortcut
+	esversion, err := client.ElasticsearchVersion("http://127.0.0.1:9200")
 	if err != nil {
-		log.Fatalf("Error getting response: %s", err)
+		// Handle error
+		panic(err)
 	}
-	defer res.Body.Close()
+	fmt.Printf("Elasticsearch version %s\n", esversion)
 
-	if res.IsError() {
-		var e map[string]interface{}
-		if err := json.NewDecoder(res.Body).Decode(&e); err != nil {
-			log.Fatalf("Error parsing the response body: %s", err)
-		} else {
-			// Print the response status and error information.
-			log.Fatalf("[%s] %s: %s",
-				res.Status(),
-				e["error"].(map[string]interface{})["type"],
-				e["error"].(map[string]interface{})["reason"],
-			)
+	// Search with a term query
+	termQuery := elastic.NewTermQuery("owner", "herbrant")
+	searchResult, err := client.Search().
+		Index("repositories"). // search in index "twitter"
+		Query(termQuery).      // specify the query
+		From(0).Size(1000).    // take documents 0-9
+		Pretty(true).          // pretty print request and response JSON
+		Do(ctx)                // execute
+	if err != nil {
+		// Handle error
+		panic(err)
+	}
+
+	// searchResult is of type SearchResult and returns hits, suggestions,
+	// and all kinds of other information from Elasticsearch.
+	fmt.Printf("Query took %d milliseconds\n", searchResult.TookInMillis)
+
+	// Each is a convenience function that iterates over hits in a search result.
+	// It makes sure you don't need to check for nil values in the response.
+	// However, it ignores errors in serialization. If you want full control
+	// over iterating the hits, see below.
+	var ttyp ClassifiedRepo
+	for _, item := range searchResult.Each(reflect.TypeOf(ttyp)) {
+		if t, ok := item.(ClassifiedRepo); ok {
+			fmt.Println(t)
+		}
+	}
+	// TotalHits is another convenience function that works even when something goes wrong.
+	fmt.Printf("Found a total of %d classified repos\n", searchResult.TotalHits())
+
+	var labelList []int
+
+	// Iterate through results
+	for _, hit := range searchResult.Hits.Hits {
+		// hit.Index contains the name of the index
+
+		// Deserialize hit.Source into a Tweet (could also be just a map[string]interface{}).
+		var t ClassifiedRepo
+		err := json.Unmarshal(hit.Source, &t)
+
+		if err != nil {
+			continue
+		}
+
+		fmt.Println(t)
+
+		if !contains(labelList, t.Label) {
+			labelList = append(labelList, t.Label)
 		}
 	}
 
-	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
-		log.Fatalf("Error parsing the response body: %s", err)
-	}
-
-	// Print the response status, number of results, and request duration.
-	log.Printf(
-		"[%s] %d hits; took: %dms",
-		res.Status(),
-		int(r["hits"].(map[string]interface{})["total"].(map[string]interface{})["value"].(float64)),
-		int(r["took"].(float64)),
-	)
-	// Print the ID and document source for each hit.
-	for _, hit := range r["hits"].(map[string]interface{})["hits"].([]interface{}) {
-		log.Printf(" * ID=%s, %s", hit.(map[string]interface{})["_id"], hit.(map[string]interface{})["_source"])
-	}
-
-	log.Println(strings.Repeat("=", 37))
-
+	fmt.Println(labelList)
 }
