@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/olivere/elastic"
+	elastic "github.com/olivere/elastic/v7"
 )
 
 // ClassifiedRepo is a structure used for serializing/deserializing data in Elasticsearch.
@@ -74,12 +74,12 @@ func main() {
 	// It makes sure you don't need to check for nil values in the response.
 	// However, it ignores errors in serialization. If you want full control
 	// over iterating the hits, see below.
-	var ttyp ClassifiedRepo
-	for _, item := range searchResult.Each(reflect.TypeOf(ttyp)) {
-		if t, ok := item.(ClassifiedRepo); ok {
-			fmt.Println(t)
-		}
-	}
+	// var ttyp ClassifiedRepo
+	// for _, item := range searchResult.Each(reflect.TypeOf(ttyp)) {
+	// 	if _, ok := item.(ClassifiedRepo); ok {
+	// 		fmt.Println("Provola")
+	// 	}
+	// }
 	// TotalHits is another convenience function that works even when something goes wrong.
 	fmt.Printf("Found a total of %d classified repos\n", searchResult.TotalHits())
 
@@ -97,12 +97,39 @@ func main() {
 			continue
 		}
 
-		fmt.Println(t)
+		//fmt.Println(t)
 
 		if !contains(labelList, t.Label) {
 			labelList = append(labelList, t.Label)
 		}
 	}
 
-	fmt.Println(labelList)
+	for _, label := range labelList {
+		// Search with a term query
+		//labelQuery := elastic.NewTermQuery("label", label)
+		ownerNotQuery := elastic.NewBoolQuery().MustNot(elastic.NewTermQuery("owner", "herbrant"))
+		//joinedQuery := elastic.NewBoolQuery().Must(labelQuery, ownerNotQuery)
+
+		fmt.Println(label)
+
+		searchResult, err := client.Search().
+			Index("repositories"). // search in index "twitter"
+			Query(ownerNotQuery).  // specify the query
+			From(0).Size(100).     // take documents 0-9
+			Pretty(true).          // pretty print request and response JSON
+			Do(ctx)                // execute
+
+		if err != nil {
+			continue
+		}
+
+		var ttyp ClassifiedRepo
+		for _, item := range searchResult.Each(reflect.TypeOf(ttyp)) {
+			if t, ok := item.(ClassifiedRepo); ok {
+				fmt.Println(t)
+			}
+		}
+
+		fmt.Printf("Found a total of %d classified repos\n", searchResult.TotalHits())
+	}
 }

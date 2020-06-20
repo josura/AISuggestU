@@ -15,6 +15,6 @@ ENV SPARK_HOME /opt/spark
 
 WORKDIR /opt/classificazione_e_clustering
 
-#CMD [ "bash" ]
+CMD [ "bash" ]
 
-CMD ["sbt"]
+#CMD ["sbt"]

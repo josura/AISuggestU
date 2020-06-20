@@ -14,9 +14,9 @@ import (
 )
 
 type Message struct {
-	Owner   string `json:"owner"`
-	URLRepo string `json:"url_repo"`
-	Readme  string `json:"readme"`
+	Owner  string `json:"owner"`
+	URL    string `json:"url"`
+	Readme string `json:"readme"`
 }
 
 type ReadmeResponse struct {
