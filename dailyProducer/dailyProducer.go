@@ -17,7 +17,7 @@ type Repositories []struct {
 }
 
 func loadDailyRepos() Repositories {
-	dailyReposFile, err := os.Open("daily-fulldata.json")
+	dailyReposFile, err := os.Open("/data/daily-fulldata.json")
 
 	if err != nil {
 		fmt.Println(err)

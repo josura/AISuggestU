@@ -58,7 +58,7 @@ services:
         networks:
             - aisuggestu
         volumes:
-            - ./dailyProducer/daily-fulldata.json:/go/src/app/daily-fulldata.json
+            - ./data/:/data/
     daily-consumer:
         build: dailyConsumer
         networks:
