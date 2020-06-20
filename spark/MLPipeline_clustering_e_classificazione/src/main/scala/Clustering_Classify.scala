@@ -131,11 +131,11 @@ object Clustering_Classify {
     val bayesmodel = bayesPipeline fit predictions
 
     
-
-    val fulldf = spark.readStream.format("kafka").option("kafka.bootstrap.servers","kafka:9092").option("subscribe","daily-repos").load()
+    
+    val fulldf = spark.readStream.format("kafka").option("kafka.bootstrap.servers","kafka:9092").option("subscribe","daily-repos, user-starred-repos").load()
     val repoStringDF = fulldf.selectExpr("CAST(value AS STRING)")
     val schemaRepo = new StructType().add("url",StringType).add("owner",StringType).add("readme",StringType)
-    val reposDaily=repoStringDF.select(from_json(col("value"),schemaRepo).as("data")).select("data.*")
+    val reposDaily= cleanRepos(repoStringDF.select(from_json(col("value"),schemaRepo).as("data")).select("data.*"))
     
     
 

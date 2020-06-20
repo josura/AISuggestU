@@ -76,6 +76,10 @@ services:
         volumes:
             - ./spark/MLPipeline_clustering_e_classificazione:/opt/classificazione_e_clustering
             - ./data/:/opt/classificazione_e_clustering/data/
+    user-recommendation:
+        build: user-recomendation
+        networks:
+            - aisuggestu
         
 
 
