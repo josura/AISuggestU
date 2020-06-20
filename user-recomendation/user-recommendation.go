@@ -66,23 +66,6 @@ func main() {
 		panic(err)
 	}
 
-	// searchResult is of type SearchResult and returns hits, suggestions,
-	// and all kinds of other information from Elasticsearch.
-	fmt.Printf("Query took %d milliseconds\n", searchResult.TookInMillis)
-
-	// Each is a convenience function that iterates over hits in a search result.
-	// It makes sure you don't need to check for nil values in the response.
-	// However, it ignores errors in serialization. If you want full control
-	// over iterating the hits, see below.
-	// var ttyp ClassifiedRepo
-	// for _, item := range searchResult.Each(reflect.TypeOf(ttyp)) {
-	// 	if _, ok := item.(ClassifiedRepo); ok {
-	// 		fmt.Println("Provola")
-	// 	}
-	// }
-	// TotalHits is another convenience function that works even when something goes wrong.
-	fmt.Printf("Found a total of %d classified repos\n", searchResult.TotalHits())
-
 	var labelList []int
 
 	// Iterate through results
@@ -97,8 +80,6 @@ func main() {
 			continue
 		}
 
-		//fmt.Println(t)
-
 		if !contains(labelList, t.Label) {
 			labelList = append(labelList, t.Label)
 		}
@@ -106,15 +87,13 @@ func main() {
 
 	for _, label := range labelList {
 		// Search with a term query
-		//labelQuery := elastic.NewTermQuery("label", label)
+		labelQuery := elastic.NewTermQuery("label", label)
 		ownerNotQuery := elastic.NewBoolQuery().MustNot(elastic.NewTermQuery("owner", "herbrant"))
-		//joinedQuery := elastic.NewBoolQuery().Must(labelQuery, ownerNotQuery)
-
-		fmt.Println(label)
+		joinedQuery := elastic.NewBoolQuery().Must(labelQuery, ownerNotQuery)
 
 		searchResult, err := client.Search().
 			Index("repositories"). // search in index "twitter"
-			Query(ownerNotQuery).  // specify the query
+			Query(joinedQuery).    // specify the query
 			From(0).Size(100).     // take documents 0-9
 			Pretty(true).          // pretty print request and response JSON
 			Do(ctx)                // execute
@@ -129,7 +108,5 @@ func main() {
 				fmt.Println(t)
 			}
 		}
-
-		fmt.Printf("Found a total of %d classified repos\n", searchResult.TotalHits())
 	}
 }
