@@ -1,5 +1,4 @@
-import org.apache.spark.sql.{Row,Dataset}
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{SparkSession,Row,Dataset,SaveMode}
 import org.apache.spark.sql.functions.length
 //per convertire colonne in json in dataframe
 import org.apache.spark.sql.functions._
@@ -110,6 +109,7 @@ object Clustering_Classify {
       import spark.implicits._
 
       val repositoriesTyped = newpredictions.select(col("url"),col("owner"),col("prediction").cast(IntegerType).as("label")).as[repositorieClassified]
+      //TODO saving and loading from avro files, or hdfs
       val elasticStream =repositoriesTyped.writeStream.outputMode("append").
         format("es").option("checkpointLocation","/tmp").
         option("es.mapping.id","url").start("repositories/classified").awaitTermination
