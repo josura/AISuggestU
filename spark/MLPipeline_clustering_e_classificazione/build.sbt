@@ -16,7 +16,8 @@ libraryDependencies ++= Seq(
   ("org.apache.spark" %% "spark-streaming-kafka-0-10" % "2.4.5"),
   ("org.apache.spark" %% "spark-sql-kafka-0-10" % "2.4.5"),
   //("org.elasticsearch" % "elasticsearch-hadoop" % "7.7.1")
-  ("org.elasticsearch" % "elasticsearch-spark-20_2.11" % "7.7.1")
+  ("org.elasticsearch" % "elasticsearch-spark-20_2.11" % "7.7.1"),
+  ("org.apache.spark" %% "spark-avro" % "2.4.5")
 )
 
 dependencyOverrides ++= {
