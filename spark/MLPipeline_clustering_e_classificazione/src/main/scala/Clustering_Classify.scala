@@ -81,7 +81,7 @@ object Clustering_Classify {
     try{
       val readme: Dataset[Row]=  cleanRepos(spark.read.json("data/fulldata.json"))
       
-      val pipeline = createPipelineKmeans(10)
+      val pipeline = createPipelineKmeans(50)
 
       val model = pipeline fit readme
       val predictions = (model transform readme).withColumnRenamed("prediction","label")

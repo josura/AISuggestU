@@ -15,4 +15,4 @@ ADD entrypoint.sh /app/entrypoint.sh
 ADD execute.sh /app/execute.sh
 ADD data-parser.py /app/data-parser.py
 
-ENTRYPOINT [ "/app/entrypoint.sh" ]
+ENTRYPOINT [ "/app/execute.sh" ]

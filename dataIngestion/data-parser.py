@@ -48,7 +48,8 @@ def cleanLink(value):
 
 def filterData(data):
     pythonObj = json.loads(data)
-    stringDump = "["
+
+    stringDump = ""
 
     for val in pythonObj:
         repoUrl, owner = val['url'], val['owner']['login']
@@ -56,7 +57,14 @@ def filterData(data):
         stringDump += json.dumps({'url': repoUrl, 'owner': owner}) + ","
 
     stringDump = stringDump[:-1]
-    stringDump += ']'
+
+    counter = 0
+
+    for val in stringDump:
+        if val == ']':
+            counter += 1
+    
+    print("Counter {}".format(counter))
    
     return stringDump
 
@@ -79,7 +87,9 @@ def getRepos(iterationNumber):
     f = open(DATAPATH + "data.json", "w")
     link = "https://api.github.com/repositories"
 
-    for _ in range(0, iterationNumber):
+    f.write("[")
+
+    for i in range(0, iterationNumber):
         data = requests.get(link, headers={'Authorization': 'token ' +  GITHUB_TOKEN})
 
         if data.status_code != 200:
@@ -88,8 +98,14 @@ def getRepos(iterationNumber):
         
         header = data.headers
         filteredData = filterData(data.text)
-        f.write(filteredData.encode('utf-8'))
+
+        if i < iterationNumber - 1:
+            filteredData += ", "
+        
+        f.write(filteredData)
         link = cleanLink(header['link'])
+    
+    f.write("]")
 
     f.close()
     logging.info("Repos written to data.json.")
