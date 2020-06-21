@@ -22,6 +22,15 @@ services:
         build: flume
         networks: 
             - aisuggestu
+    kibana: 
+        image: docker.elastic.co/kibana/kibana:7.7.0
+        networks: 
+            - aisuggestu
+        environment: 
+            SERVER_NAME: kibana
+            ELASTICSEARCH_HOSTS: http://elastic-search:9200
+        ports:
+            - "5601:5601"
     zoo:
         image: zookeeper:3.4.9
         networks:
