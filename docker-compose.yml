@@ -82,10 +82,9 @@ services:
             - ./data/:/opt/classificazione_e_clustering/data/
     web:
         build: AISuggestU-Web
-        networks:
-            - aisuggestu
-        ports:
-            - "8080:8080"
+        network_mode: host
+        environment: 
+            - GITHUB_TOKEN=TOKEN
         
 
 
