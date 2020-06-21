@@ -18,14 +18,6 @@ services:
         tty: true  
         volumes:
             - ./publish-to-elastic/:/shared/
-    spark-master:
-        image: bde2020/spark-master:2.4.5-hadoop2.7
-        networks:
-            - aisuggestu
-        container_name: spark-master
-        ports:
-            - "8080:8080"
-            - "7077:7077"
     zoo:
         image: zookeeper:3.4.9
         networks:
@@ -40,17 +32,18 @@ services:
             - aisuggestu
         environment:
             - KAFKA_ZOOKEEPER_CONNECT=zoo:2181
-            - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
-            - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT
+            - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092, LISTENER_LOCALHOST://localhost:29092
+            - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,LISTENER_LOCALHOST:PLAINTEXT
             - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
         depends_on:
             - zoo
         ports:
             - "9092:9092"
+            - "29092:29092"
     data-ingestion:
         build: dataIngestion
         environment: 
-            - GITHUB_TOKEN="TOKEN"
+            - GITHUB_TOKEN=TOKEN
         volumes:
             - ./data/:/data/
     daily-producer:
@@ -66,7 +59,7 @@ services:
     starred-repos-publish:
         build: starredRepoAndPublish
         environment: 
-            - GITHUB_TOKEN="TOKEN"
+            - GITHUB_TOKEN=TOKEN
         networks:
             - aisuggestu
     spark-consumer-classifier:
@@ -77,9 +70,15 @@ services:
             - ./spark/MLPipeline_clustering_e_classificazione:/opt/classificazione_e_clustering
             - ./data/:/opt/classificazione_e_clustering/data/
     user-recommendation:
-        build: user-recomendation
+        build: user-recommendation
         networks:
             - aisuggestu
+    # web:
+    #     build: /home/davide/go/src/aisuggestu
+    #     networks:
+    #         - aisuggestu
+    #     ports:
+    #         - "8080:8080"
         
 
 
