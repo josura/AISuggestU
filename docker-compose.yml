@@ -18,6 +18,10 @@ services:
         tty: true  
         volumes:
             - ./publish-to-elastic/:/shared/
+    flume:
+        build: flume
+        networks: 
+            - aisuggestu
     zoo:
         image: zookeeper:3.4.9
         networks:
