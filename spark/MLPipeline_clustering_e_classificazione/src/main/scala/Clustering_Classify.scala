@@ -40,7 +40,7 @@ import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
 
 
 object Clustering_Classify {
-  case class repositorieClassified(url:String,owner:String,label:Int)
+  case class repositorieClassified(url:String,owner:String, stars:Int, label:Int)
   def cleanRepos(readme:Dataset[Row]):Dataset[Row] = {
     return readme.na.drop.filter(length(readme("readme"))>3)
   }
@@ -68,8 +68,8 @@ object Clustering_Classify {
 
   def predictNewReposLabel(oldRepos:Dataset[Row],newRepos:Dataset[Row],model:PipelineModel):Dataset[Row] = {
     val pipelineTokenizer = createPipelineTokenizer() 
-    val tokenizer = pipelineTokenizer fit (oldRepos union newRepos)
-    val newReposWithFeatures = pipelineTokenizer.fit(oldRepos union newRepos) transform newRepos
+    val tokenizer = pipelineTokenizer fit (oldRepos union newRepos.select("url", "owner", "readme"))
+    val newReposWithFeatures = pipelineTokenizer.fit(oldRepos union newRepos.select("url", "owner", "readme")) transform newRepos
     return model transform newReposWithFeatures
   }
   def main(args: Array[String]) {
@@ -95,7 +95,7 @@ object Clustering_Classify {
       
       val fulldf = spark.readStream.format("kafka").option("kafka.bootstrap.servers","kafka:9092").option("subscribe","daily-repos, user-starred-repos").load()
       val repoStringDF = fulldf.selectExpr("CAST(value AS STRING)")
-      val schemaRepo = new StructType().add("url",StringType).add("owner",StringType).add("readme",StringType)
+      val schemaRepo = new StructType().add("url",StringType).add("owner",StringType).add("readme",StringType).add("stars", IntegerType)
       val reposDaily= cleanRepos(repoStringDF.select(from_json(col("value"),schemaRepo).as("data")).select("data.*"))
       
       
@@ -108,7 +108,7 @@ object Clustering_Classify {
       import org.elasticsearch.spark.sql._
       import spark.implicits._
 
-      val repositoriesTyped = newpredictions.select(col("url"),col("owner"),col("prediction").cast(IntegerType).as("label")).as[repositorieClassified]
+      val repositoriesTyped = newpredictions.select(col("url"),col("owner"), col("stars"),col("prediction").cast(IntegerType).as("label")).as[repositorieClassified]
       //TODO saving and loading from avro files, or hdfs
       val elasticStream =repositoriesTyped.writeStream.outputMode("append").
         format("es").option("checkpointLocation","/tmp").

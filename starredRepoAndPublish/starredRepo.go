@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strings"
 
 	"github.com/bbalet/stopwords"
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
@@ -17,6 +18,7 @@ type Message struct {
 	Owner  string `json:"owner"`
 	URL    string `json:"url"`
 	Readme string `json:"readme"`
+	Stars  int    `json:"stars"`
 }
 
 type ReadmeResponse struct {
@@ -113,6 +115,10 @@ func getReadme(url string) (string, error) {
 	return readme, err
 }
 
+func clearURL(url string) string {
+	return strings.Replace(url, "https://api.github.com/repos", "https://github.com", 1)
+}
+
 func main() {
 	argsWithoutProg := os.Args[1:]
 
@@ -146,14 +152,16 @@ func main() {
 	p := initKafkaProducer()
 
 	for _, result := range results {
-		url := fmt.Sprintf("%s", result["url"])
+		url, _ := result["url"].(string)
 		readme, err := getReadme(url)
 
 		if err != nil {
 			continue
 		}
 
-		newMessage := Message{argsWithoutProg[0], url, readme}
+		stars := int(result["stargazers_count"].(float64))
+
+		newMessage := Message{argsWithoutProg[0], clearURL(url), readme, stars}
 
 		jsonMessage, err := json.Marshal(newMessage)
 
@@ -161,7 +169,6 @@ func main() {
 			continue
 		}
 
-		fmt.Println(string(jsonMessage))
 		userStarred(p, jsonMessage)
 	}
 }

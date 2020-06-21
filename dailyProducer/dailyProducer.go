@@ -14,6 +14,7 @@ type Repositories []struct {
 	URL    string `json:"url"`
 	Owner  string `json:"owner"`
 	Readme string `json:"readme"`
+	Stars  int    `json:"stars"`
 }
 
 func loadDailyRepos() Repositories {

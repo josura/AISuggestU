@@ -73,9 +73,9 @@ def filterDailyData(data):
     stringDump = "["
 
     for val in pythonObj:
-        repoUrl, owner = val['url'], val['author']
+        repoUrl, owner, stars = val['url'], val['author'], val['stars']
 
-        stringDump += json.dumps({'url': repoUrl, 'owner': owner}) + ","
+        stringDump += json.dumps({'url': repoUrl, 'owner': owner, 'stars': stars}) + ","
 
     stringDump = stringDump[:-1]
     stringDump += ']'
