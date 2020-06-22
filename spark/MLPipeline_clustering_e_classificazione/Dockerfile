@@ -21,6 +21,4 @@ ADD build.sbt build.sbt
 
 RUN sbt compile
 
-CMD [ "bash" ]
-
-#CMD ["sbt"]
+ENTRYPOINT [ "sbt", "run" ]
