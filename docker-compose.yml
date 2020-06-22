@@ -89,12 +89,11 @@ services:
         volumes:
             - ./spark/MLPipeline_tweet_implicit_reviews:/opt/classificazione_e_clustering
             - ./data/:/opt/classificazione_e_clustering/data/
-    # web:
-    #     build: /home/davide/go/src/aisuggestu
-    #     networks:
-    #         - aisuggestu
-    #     ports:
-    #         - "8080:8080"
+    web:
+        build: AISuggestU-Web
+        network_mode: host
+        environment: 
+            - GITHUB_TOKEN=TOKEN
         
 
 
