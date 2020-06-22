@@ -121,7 +121,7 @@ def getDailyTrending():
         return False
     else:
         filteredData = filterDailyData(data.text)
-        f.write((filteredData))
+        f.write(filteredData)
         f.close()
         logging.info("Daily repos written to daily-data.json.")
         return True
@@ -137,8 +137,9 @@ def getReadme(inputPath, outputPath):
 
     for repo in data:
         readmeUrl = repo['url'] + "/readme"
+
         if not checkUrlOrApi(readmeUrl):
-            readmeUrl = "https://api.github.com/repos/" + readmeUrl[19:]
+            readmeUrl = readmeUrl.replace("https://github.com/","https://api.github.com/repos/")
 
         response = requests.get(readmeUrl, headers={'Authorization': 'token ' +  GITHUB_TOKEN})
 
@@ -161,6 +162,7 @@ def getReadme(inputPath, outputPath):
 def main():
     if len(GITHUB_TOKEN) < 1:
         logging.error("Please set GITHUB_TOKEN")
+        exit(1)
     elif len(sys.argv) > 1:
         nltk.download('stopwords')
         nltk.download('punkt')
