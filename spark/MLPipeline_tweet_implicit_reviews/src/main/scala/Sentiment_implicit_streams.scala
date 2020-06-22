@@ -78,41 +78,35 @@ object Sentiment_implicit_streams {
     master("local[*]").getOrCreate()
     // keep attention on the types returned
     spark.sparkContext.setLogLevel("ERROR")
-    try{
-      val readme: Dataset[Row]=  cleanRepos(spark.read.json("data/fulldata.json"))
+    try {
+      // Create context with 2 second batch interval
+      val streamingContext = new StreamingContext(spark.sparkContext, Seconds(5))
+      val kafkaParams = Map[String, Object](
+        "bootstrap.servers" -> "kafka:9092",
+        "key.deserializer" -> classOf[StringDeserializer],
+        "value.deserializer" -> classOf[StringDeserializer],
+        "group.id" -> "twitter_group",
+        "auto.offset.reset" -> "latest",
+        "enable.auto.commit" -> (false: java.lang.Boolean)
+      )
       
-      val pipeline = createPipelineKmeans(10)
+      val topics = Array("daily-repos")
+      val stream = KafkaUtils.createDirectStream[String, String](
+        streamingContext,
+        PreferConsistent,
+        Subscribe[String, String](topics, kafkaParams)
+      )
 
-      val model = pipeline fit readme
-      val predictions = (model transform readme).withColumnRenamed("prediction","label")
-      
-      //creazione modello classificazione
-      val bayesPipeline = new Pipeline().setStages( Array(new NaiveBayes))
+      val messageStreaming = stream.map(record => (record.value))
 
-      val bayesmodel = bayesPipeline fit predictions
-
-      
-      
-      val fulldf = spark.readStream.format("kafka").option("kafka.bootstrap.servers","kafka:9092").option("subscribe","daily-repos, user-starred-repos").load()
-      val repoStringDF = fulldf.selectExpr("CAST(value AS STRING)")
-      val schemaRepo = new StructType().add("url",StringType).add("owner",StringType).add("readme",StringType)
-      val reposDaily= cleanRepos(repoStringDF.select(from_json(col("value"),schemaRepo).as("data")).select("data.*"))
-      
-      
-
-      //da modificare
-      val newpredictions:Dataset[Row]=predictNewReposLabel(readme,reposDaily,bayesmodel)
-
-      val consoleStream = newpredictions.writeStream.format("console").outputMode("append").start()
-      //caricamento su elastic search
-      import org.elasticsearch.spark.sql._
       import spark.implicits._
 
-      val repositoriesTyped = newpredictions.select(col("url"),col("owner"),col("prediction").cast(IntegerType).as("label")).as[repositorieClassified]
-      //TODO saving and loading from avro files, or hdfs
-      val elasticStream =repositoriesTyped.writeStream.outputMode("append").
-        format("es").option("checkpointLocation","/tmp").
-        option("es.mapping.id","url").start("repositories/classified").awaitTermination
+      //val messageStreamingDF = messageStreaming.map(rdd=>rdd.map(recordstr=>spark.read.json(Seq(recordstr.toString()).toDS)))
+      val messageStreamingDF = messageStreaming.map(stringa=>spark.read.json(Seq(stringa).toDS))
+
+      messageStreamingDF.foreachRDD(rdd=> rdd.foreach(_.show))
+      streamingContext.start()
+      streamingContext.awaitTermination()
     } catch {
       case e:Exception=>{spark.stop()}
     }
