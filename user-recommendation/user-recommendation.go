@@ -59,8 +59,9 @@ func main() {
 		Index("repositories"). // search in index "twitter"
 		Query(termQuery).      // specify the query
 		From(0).Size(1000).    // take documents 0-9
-		Pretty(true).          // pretty print request and response JSON
-		Do(ctx)                // execute
+		Sort("stars", false).
+		Pretty(true). // pretty print request and response JSON
+		Do(ctx)       // execute
 	if err != nil {
 		// Handle error
 		panic(err)
