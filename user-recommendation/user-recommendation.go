@@ -54,7 +54,7 @@ func main() {
 	fmt.Printf("Elasticsearch version %s\n", esversion)
 
 	// Search with a term query
-	termQuery := elastic.NewTermQuery("owner", "josura")
+	termQuery := elastic.NewMatchQuery("owner", "josura")
 	searchResult, err := client.Search().
 		Index("repositories"). // search in index "twitter"
 		Query(termQuery).      // specify the query
@@ -89,7 +89,7 @@ func main() {
 	for _, label := range labelList {
 		// Search with a term query
 		labelQuery := elastic.NewTermQuery("label", label)
-		ownerNotQuery := elastic.NewBoolQuery().MustNot(elastic.NewTermQuery("owner", "josura"))
+		ownerNotQuery := elastic.NewBoolQuery().MustNot(elastic.NewMatchQuery("owner", "josura"))
 		joinedQuery := elastic.NewBoolQuery().Must(labelQuery, ownerNotQuery)
 
 		searchResult, err := client.Search().
