@@ -99,8 +99,6 @@ object Clustering_Classify {
       val reposDaily= cleanRepos(repoStringDF.select(from_json(col("value"),schemaRepo).as("data")).select("data.*"))
       
       
-
-      //da modificare
       val newpredictions:Dataset[Row]=predictNewReposLabel(readme,reposDaily,bayesmodel)
 
       val consoleStream = newpredictions.writeStream.format("console").outputMode("append").start()
