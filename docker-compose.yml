@@ -10,14 +10,6 @@ services:
         ports:
             - "9200:9200"
             - "9300:9300"
-    publish-to-elastic:
-        build: ./publish-to-elastic/docker
-        networks:
-            - aisuggestu
-        stdin_open: true
-        tty: true  
-        volumes:
-            - ./publish-to-elastic/:/shared/
     flume:
         build: flume
         networks: 
