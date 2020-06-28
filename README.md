@@ -1,7 +1,9 @@
 # AISuggestU
 <p align="center"><img src="./docs/img/AISuggestLogo.svg" alt="drawing" width="200"/></p>
 
-Project about recommendation systems, primarily GITHUB, hoping to continue with other sources
+Project about recommendation systems, primarily GITHUB.
+This project was created for a course at UNICT (Technologies for advanced programming).
+The technologies used in the main project are Kafka, Spark, Spark streaming, Elastic Search, Kibana, etc...
 
 <p align="center"><img src="./docs/img/AISuggestU_final.png" alt="drawing" width="600"/></p>
 
@@ -22,6 +24,11 @@ docker-compose up zoo kafka
 Run ElasticSearch:
 ```
 docker-compose up elastic-search
+```
+
+Run data-ingestion for initial clustering:
+```
+docker-compose up data-ingestion ...
 ```
 
 Run Spark Consumer:
