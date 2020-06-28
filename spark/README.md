@@ -1,6 +1,9 @@
-Da mettere i source di spark nella cartella sparkdir, anche se non ci sarebbe bisogno con sbt, 
-##TODO
-costruzione di un raccomandatore sia sulla base collaborativa, sia sulla base di content-based(penso di implementarlo tramite clusterizzazione-classificazione-marketbasket prima creando i profili delle repo, poi clusterizzarli-classificarli, infine alla richiesta verranno restituiti libri negli stessi cluster dei libri preferiti della persona).
+# spark recommendation
+For the recommendation, an **ensemble** method was used, first by **clustering** a defined number of repos using the readme as a metric and [kmeans](https://spark.apache.org/docs/latest/ml-clustering.html#k-means) as the clustering method, then **classifying** using a [neural network](https://spark.apache.org/docs/latest/ml-classification-regression.html#multilayer-perceptron-classifier) or a [naive bayes](https://spark.apache.org/docs/latest/ml-classification-regression.html#naive-bayes) classifier.
+Predictions are based on the labels predicted
 
-###Creazione dei profili degli oggetti
-La creazione è abbastanza complicata, tra classificazione e regressione, devo vedere e capire come farlo, alla fine penso di fare anche qualcosa con AI anche se volevo lasciarlo per dopo
+## Creation of repos profiles
+For the creation of repos profiles, text mining methods were used, for every word, [TF-IDF](https://spark.apache.org/docs/latest/ml-features.html#tf-idf) was used
+
+### future plans
+collaborative filtering, other types of recommendations methods or ideas.
