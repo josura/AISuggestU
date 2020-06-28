@@ -48,7 +48,7 @@ services:
     data-ingestion:
         build: dataIngestion
         environment: 
-            - GITHUB_TOKEN=TOKEN
+            - GITHUB_TOKEN
         volumes:
             - ./data/:/data/
     daily-producer:
@@ -64,7 +64,7 @@ services:
     starred-repos-publish:
         build: starredRepoAndPublish
         environment: 
-            - GITHUB_TOKEN=TOKEN
+            - GITHUB_TOKEN
         networks:
             - aisuggestu
     spark-consumer-classifier:
@@ -85,7 +85,7 @@ services:
         build: AISuggestU-Web
         network_mode: host
         environment: 
-            - GITHUB_TOKEN=TOKEN
+            - GITHUB_TOKEN
         
 
 
