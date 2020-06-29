@@ -60,7 +60,10 @@ docker-compose up kibana
 ```
 
 ## Data Visualization
-To see the data in kibana go to localhost:5601 and specify the index **repositories** 
+To see the data in kibana go to **localhost:5601** and specify the index **repositories** 
+
+## Web application 
+To access the web application go to **localhost:8080**
 
 # Built with
 - [Kafka](https://kafka.apache.org/)
