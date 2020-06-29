@@ -49,9 +49,14 @@ Run Web Application:
 docker-compose up web
 ```
 
-Run daily data ingestion:
+Run daily data ingestion (cronjob not set in the first build):
 ```
 docker-compose up daily-data-ingestion
+```
+
+Send daily data to kafka:
+```
+docker-compose up daily-producer
 ```
 
 Run Kibana(optional):
