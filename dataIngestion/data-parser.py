@@ -57,14 +57,6 @@ def filterData(data):
         stringDump += json.dumps({'url': repoUrl, 'owner': owner}) + ","
 
     stringDump = stringDump[:-1]
-
-    counter = 0
-
-    for val in stringDump:
-        if val == ']':
-            counter += 1
-    
-    print("Counter {}".format(counter))
    
     return stringDump
 

@@ -14,5 +14,3 @@ RUN cp /usr/share/zoneinfo/Europe/Rome /etc/localtime &&\
 ADD entrypoint.sh /app/entrypoint.sh
 ADD execute.sh /app/execute.sh
 ADD data-parser.py /app/data-parser.py
-
-ENTRYPOINT [ "/app/execute.sh" ]

@@ -51,6 +51,14 @@ services:
             - GITHUB_TOKEN
         volumes:
             - ./data/:/data/
+        entrypoint: [ "/app/execute.sh", "default" ]
+    daily-data-ingestion:
+        build: dataIngestion
+        environment: 
+            - GITHUB_TOKEN
+        volumes:
+            - ./data/:/data/
+        entrypoint: [ "/app/execute.sh", "daily" ]
     daily-producer:
         build: dailyProducer
         networks:
