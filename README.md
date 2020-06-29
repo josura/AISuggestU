@@ -15,7 +15,7 @@ The presentation of this project is in **docs**
 - Around 5GB of RAM 
 - jupyter notebook to see the presentation in **docs**
 
-# Usage
+# Devel Usage
 First of all clone the project:
 ```
 git clone https://github.com/josura/AISuggestU
@@ -63,6 +63,8 @@ Run Kibana(optional):
 ```
 docker-compose up kibana
 ```
+# User Usage
+Go to the web app and see recommendations for a Github User.
 
 ## Data Visualization
 To see the data in kibana go to **localhost:5601** and specify the index **repositories** 
