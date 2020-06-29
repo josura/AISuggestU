@@ -80,6 +80,7 @@ object Clustering_Classify {
     spark.sparkContext.setLogLevel("ERROR")
     try{
       val readme: Dataset[Row]=  cleanRepos(spark.read.json("data/fulldata.json"))
+      readme cache
       
       val pipeline = createPipelineKmeans(50)
 
