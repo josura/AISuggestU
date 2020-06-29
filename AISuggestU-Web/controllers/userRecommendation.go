@@ -14,6 +14,7 @@ type ClassifiedRepo struct {
 	URL   string `json:"url"`
 	Owner string `json:"owner"`
 	Label int    `json:"label"`
+	Stars int    `json:"stars"`
 }
 
 func contains(s []int, e int) bool {

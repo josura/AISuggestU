@@ -107,17 +107,19 @@
             <h1 class="logo">Suggestions for {{.Username}}</h1>
         </header>
 
+        {{$label:=-1}}
         <div class="container">
-            {{range $val := .Suggestions}}
+            {{range .Suggestions}}
             <div class="row h-100">
                 <div class="col-sm-12 my-auto">
                     <div class="card">
                         <div class="card text-center">
                             <div class="card-body">
-                                <h2 class="card-title">{{$val.Name}}</h2>
-                                <p class="card-text">Description.</p>
+                                <h2 class="card-title">{{.Name}}</h2>
+                                <p class="card-text">Stars: {{.ClassifiedRepo.Stars}}</p>
+                                <p class="card-text">Label: {{.ClassifiedRepo.Label}}</p>
                                 <div class="container-login100-form-btn m-t-32">
-                                    <a href="{{$val.ClassifiedRepo.URL}}" target="_blank" rel="noopener noreferrer" class="login100-form-btn">Github</a>
+                                    <a href="{{.ClassifiedRepo.URL}}" target="_blank" rel="noopener noreferrer" class="login100-form-btn">Github</a>
                                 </div>
                             </div>
                         </div>
