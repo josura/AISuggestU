@@ -12,7 +12,7 @@ if [ "$mod" == "daily" ]; then
     python data-parser.py daily
 elif [ "$mod" == "default" ]; then
     if [ -z "$2" ]; then
-        python data-parser.py default 100
+        python data-parser.py default 5 
     else
         python data-parser.py default "$2"
     fi

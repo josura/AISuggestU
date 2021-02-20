@@ -104,7 +104,8 @@ def getRepos(iterationNumber):
 
 def getDailyTrending():
     f = open(DATAPATH + "daily-data.json", "w")
-    link = "https://github-trending-api.now.sh/repositories?language=&since=daily"
+    link = "https://github-trending-api.now.sh/repositories?language=&since=daily"      #It doesn't work anymore, other not official APIs seems to be down
+    #TODO fix daily trending
 
     data = requests.get(link, headers={'Authorization': 'token ' +  GITHUB_TOKEN})
 
